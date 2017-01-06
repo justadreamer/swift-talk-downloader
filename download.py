@@ -1,8 +1,9 @@
+# python3 script
+# put your cookie.txt next to the script and launch it from that working dir
+#
+
 import requests
 from bs4 import BeautifulSoup
-
-from http.cookiejar import FileCookieJar
-from http.cookiejar import LWPCookieJar
 from http.cookiejar import MozillaCookieJar
 
 import os
@@ -56,7 +57,7 @@ def getFilesFromM3U(m3uContent):
 baseURL = "https://talk.objc.io/episodes/"
 
 def download(episode):
-    cookies = MozillaCookieJar(filename=os.getcwd()+'/cookies.txt')
+    cookies = MozillaCookieJar(filename=os.path.join(os.getcwd(),'cookies.txt'))
     cookies.load()
     pageContent = downloadTextContent(makeEpisodeURL(episode), cookies=cookies)
     baseSourceURL = getBaseSourceURL(pageContent)
@@ -83,10 +84,13 @@ def download(episode):
         downloadContent(tsFileURL, tsFilePath, cookies=cookies)
 
 episodes = []
-for i in range(12,31):
+
+for i in range(1,32):
     episode="S01E" + '{:02d}'.format(i)
     episodes.append(episode)
+
 print(episodes)
+
 for episode in episodes:
     download(episode)
     pass
@@ -95,3 +99,4 @@ for episode in episodes:
 #mkdir videos
 #cd content
 #for episode in `ls`; do echo "cat $episode/* > ../videos/$episode.m2ts"; done
+
