@@ -98,5 +98,5 @@ for episode in episodes:
 #gluing all episodes together
 #mkdir videos
 #cd content
-#for episode in `ls`; do echo "cat $episode/* > ../videos/$episode.m2ts"; done
+#for episode in `ls content`; do CMD="cat $episode/* > ../videos/$episode.m2ts"; echo $CMD; done
 
