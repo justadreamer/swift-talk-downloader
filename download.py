@@ -114,7 +114,7 @@ class Episode:
             return
         shortFileName = self.getFileName(self.shortName)
         shortFilePath = os.path.join(os.getcwd(), VIDEOS_DIR, shortFileName)
-        if os.path.exists(shortFileName):
+        if os.path.exists(shortFilePath):
             print("renaming " + shortFileName + " to " + fullFileName)
             os.rename(shortFilePath,fullFilePath)
 
