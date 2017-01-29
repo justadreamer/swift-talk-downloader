@@ -97,14 +97,19 @@ class Episode:
             downloadContent(tsFileURL, tsFilePath, cookies=cookies)
 
     def glueChunks(self):
+        videoDir = self.getVideoDir()
+        os.system('mkdir -p ' + videoDir)
         os.system('cat ' + self.getChunksDir() + '/*.ts > ' + self.getVideoFilePath())
 
     def getFileName(self, name):
         return name + '.' + self.ext
 
+    def getVideoDir():
+        return os.path.join(os.getcwd(), VIDEOS_DIR)
+
     def getVideoFilePath(self):
         fullFileName = self.getFileName(self.fullName)
-        fullFileName = os.path.join(os.getcwd(), VIDEOS_DIR, fullFileName)
+        fullFileName = os.path.join(self.getVideoDir(), fullFileName)
         return fullFileName
 
     def renameExistingIfNeeded(self):
