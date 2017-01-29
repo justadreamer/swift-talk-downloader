@@ -104,7 +104,7 @@ class Episode:
     def getFileName(self, name):
         return name + '.' + self.ext
 
-    def getVideoDir():
+    def getVideoDir(self):
         return os.path.join(os.getcwd(), VIDEOS_DIR)
 
     def getVideoFilePath(self):
