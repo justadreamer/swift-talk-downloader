@@ -5,8 +5,9 @@
 import requests
 from bs4 import BeautifulSoup
 from http.cookiejar import MozillaCookieJar
-
+from http.cookiejar import LoadError
 import os
+import sys
 
 CHUNKS_DIR = 'content'
 VIDEOS_DIR = 'videos'
@@ -127,6 +128,7 @@ class Episode:
         return os.path.exists(self.getVideoFilePath())
 
     def download(self,cookies):
+        print("Downloading", self)
         self.renameExistingIfNeeded()
         if self.isDownloaded():
             print(self.fullName + ' is already downloaded')
@@ -151,21 +153,57 @@ def parseEpisodes(baseURL,cookies):
     episodes = []
     for h3 in soup.find_all('h3'):
         a = h3.find('a')
+        if a is None:
+            return None
         relativeURL = a['href']
         episode = Episode(baseURL,relativeURL)
         episodes.append(episode)
     return episodes
 
+def tryFixCookieFile(filename):
+    print("Trying to fix cookie file")
+    f = open(filename)
+    lines = ['# Netscape HTTP Cookie File']
+    for l in f:
+        lines.append(l)
+    f.close()
+
+    f = open(filename,'w')
+    for l in lines:
+        print(l,file=f)
+    f.close()
+
+def tryLoadCookies(cookies: MozillaCookieJar):
+    try:
+        cookies.load()
+        return True
+    except LoadError:
+        print("Cookie has incorrect format, must have comment containing # Netscape on the top")
+    return False
+
+def loadCookies():
+    cookieFileName = os.path.join(os.getcwd(), 'cookies.txt')
+    cookies = MozillaCookieJar(filename=cookieFileName)
+    if not tryLoadCookies(cookies):
+        tryFixCookieFile(cookieFileName)
+        tryLoadCookies(cookies)
+    return cookies
+
 def main():
     baseURL = "https://talk.objc.io/episodes/"
-    cookies = MozillaCookieJar(filename=os.path.join(os.getcwd(), 'cookies.txt'))
-    cookies.load()
-
+    cookies = loadCookies()
     episodes = parseEpisodes(baseURL,cookies)
 
-    for episode in episodes:
-        print ("Downloading", episode)
-        episode.download(cookies)
+    if episodes is None or len(episodes)==0:
+        print("Error parsing episodes, check your cookies")
+        return
+
+    if '--last' in sys.argv:
+        print("Downloading last episode only")
+        episodes[0].download(cookies)
+    else:
+        for episode in episodes:
+            episode.download(cookies)
 
 if __name__ == "__main__":
     main()
