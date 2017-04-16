@@ -200,7 +200,7 @@ def main():
         print("Error parsing episodes, check your cookies")
         return
 
-    if '--last' in sys.argv:
+    if '--last' in sys.argv or '--latest' in sys.argv:
         print("Downloading last episode only")
         episodes[0].download(cookies)
     else:
