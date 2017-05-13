@@ -37,6 +37,7 @@ class Episode:
         self.fullName = self.getFullName()
         self.shortName = self.getShortName()
         self.ext = 'm2ts'
+        self.gdriveUpload = False
 
     def __str__(self):
         return "Episode: " + self.fullName
@@ -127,6 +128,10 @@ class Episode:
     def isDownloaded(self):
         return os.path.exists(self.getVideoFilePath())
 
+    def gdriveUploadIfNeeded(self):
+        if self.gdriveUpload:
+            os.system('gdrive upload ' + self.getVideoFilePath())
+
     def download(self,cookies):
         print("Downloading", self)
         self.renameExistingIfNeeded()
@@ -135,6 +140,7 @@ class Episode:
             return
         self.downloadChunks(cookies)
         self.glueChunks()
+        self.gdriveUploadIfNeeded()
 
 def saveUTF8Text(text,path):
     file = open(path, "wb")
@@ -199,6 +205,10 @@ def main():
     if episodes is None or len(episodes)==0:
         print("Error parsing episodes, check your cookies")
         return
+
+    if '--gdrive-upload' in sys.argv:
+        for episode in episodes:
+            episode.gdriveUpload = True
 
     if '--last' in sys.argv or '--latest' in sys.argv:
         print("Downloading last episode only")
