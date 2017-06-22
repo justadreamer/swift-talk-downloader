@@ -206,6 +206,7 @@ def main():
         print("Error parsing episodes, check your cookies")
         return
 
+# TODO: use some nice argument parsing lib, like getopt
     if '--gdrive-upload' in sys.argv:
         for episode in episodes:
             episode.gdriveUpload = True
@@ -213,9 +214,18 @@ def main():
     if '--last' in sys.argv or '--latest' in sys.argv:
         print("Downloading last episode only")
         episodes[0].download(cookies)
+    elif '-e' in sys.argv:
+        argInd = sys.argv.index('-e')
+        ep = sys.argv[argInd+1]
+        print("Downloading episode",ep)
+        for episode in episodes:
+            if ep in episode.fullName:
+                episode.download(cookies)
+                break
     else:
         for episode in episodes:
             episode.download(cookies)
+
 
 if __name__ == "__main__":
     main()
