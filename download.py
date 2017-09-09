@@ -8,6 +8,7 @@ from http.cookiejar import MozillaCookieJar
 from http.cookiejar import LoadError
 import os
 import sys
+from GoogleDriveWrapper import Folder
 
 CHUNKS_DIR = 'content'
 VIDEOS_DIR = 'videos'
@@ -130,7 +131,9 @@ class Episode:
 
     def gdriveUploadIfNeeded(self):
         if self.gdriveUpload:
-            os.system('gdrive upload ' + self.getVideoFilePath())
+            f = Folder('SwiftTalk')
+            print('uploading to google drive')
+            f.upload(self.getVideoFilePath())
 
     def download(self,cookies):
         print("Downloading", self)
