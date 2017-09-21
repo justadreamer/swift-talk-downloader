@@ -4,11 +4,10 @@
 
 import requests
 from bs4 import BeautifulSoup
-from http.cookiejar import MozillaCookieJar
-from http.cookiejar import LoadError
 import os
 import sys
 from GoogleDriveWrapper import Folder
+from cookies import loadCookies
 
 CHUNKS_DIR = 'content'
 VIDEOS_DIR = 'videos'
@@ -169,43 +168,13 @@ def parseEpisodes(baseURL,cookies):
         episodes.append(episode)
     return episodes
 
-def tryFixCookieFile(filename):
-    print("Trying to fix cookie file")
-    f = open(filename)
-    lines = ['# Netscape HTTP Cookie File\n']
-    for l in f:
-        lines.append(l)
-    f.close()
-
-    f = open(filename,'w')
-    for l in lines:
-        print(l,file=f,end='')
-    f.close()
-
-def tryLoadCookies(cookies: MozillaCookieJar):
-    try:
-        cookies.load(ignore_expires=True)
-        for cookie in cookies:
-            cookie.expires = 1551297187
-        return True
-    except LoadError:
-        print("Cookie has incorrect format, must have comment containing # Netscape on the top")
-    return False
-
-def loadCookies():
-    cookieFileName = os.path.join(os.getcwd(), 'cookies.txt')
-    cookies = MozillaCookieJar(filename=cookieFileName)
-    if not tryLoadCookies(cookies):
-        tryFixCookieFile(cookieFileName)
-        tryLoadCookies(cookies)
-    return cookies
-
 def main():
     baseURL = "https://talk.objc.io/episodes/"
-    cookies = loadCookies()
-    episodes = parseEpisodes(baseURL,cookies)
+    cookieFileName = os.path.join(os.getcwd(), 'cookies.txt')
+    cookies = loadCookies(cookieFileName)
+    episodes = parseEpisodes(baseURL, cookies)
 
-    if episodes is None or len(episodes)==0:
+    if episodes is None or len(episodes) == 0:
         print("Error parsing episodes, check your cookies")
         return
 
