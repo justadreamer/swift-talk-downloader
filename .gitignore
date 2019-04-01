@@ -2,3 +2,6 @@ cookies.txt
 content
 videos
 **/eugene.xml
+.idea/workspace.xml
+__pycache__/*
+credentials.json
