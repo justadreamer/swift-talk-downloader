@@ -8,6 +8,7 @@ import os
 import sys
 from GoogleDriveWrapper import Folder
 from cookies import loadCookies
+import subprocess
 
 CHUNKS_DIR = 'content'
 VIDEOS_DIR = 'videos'
@@ -36,7 +37,7 @@ class Episode:
         self.relativeURL = relativeURL
         self.fullName = self.getFullName()
         self.shortName = self.getShortName()
-        self.ext = 'm2ts'
+        self.ext = 'mp4'
         self.gdriveUpload = False
 
     def __str__(self):
@@ -53,55 +54,9 @@ class Episode:
         components = self.fullName.split('-')
         return components[0]
 
-    def makeEpisodePageURL(self,episode):
-        pageURL = appendPathComponent(self.baseURL,episode)
+    def makeEpisodePageURL(self):
+        pageURL = appendPathComponent(self.baseURL,self.fullName)
         return pageURL
-
-    def getFilesFromM3U(self,m3uContent):
-        lines = m3uContent.split("\n")
-        filenames = list(filter(lambda l: len(l) > 0 and not l[0] == '#', lines))
-        return filenames
-
-    def getBaseChunksSourceURL(self,markup):
-        soup = BeautifulSoup(markup, "html.parser")
-        video = soup.find("video")
-        source = video.find("source")
-        sourceURL = source["src"]
-        baseSourceURL = sourceURL.rsplit("/", 1)[0]
-        return baseSourceURL
-
-    def getChunksDir(self):
-        return os.path.join(os.getcwd(), CHUNKS_DIR, self.shortName)
-
-    def downloadChunks(self,cookies):
-        pageContent = downloadTextContent(self.makeEpisodePageURL(self.fullName), cookies=cookies)
-        baseChunksSourceURL = self.getBaseChunksSourceURL(pageContent)
-        m3uURL = appendPathComponent(baseChunksSourceURL, '1080p.m3u8')
-        m3uContent = downloadTextContent(m3uURL, cookies=cookies)
-        tsFiles = self.getFilesFromM3U(m3uContent)
-        print("will download the following chunks: ", tsFiles)
-        print("# of chunks: ", len(tsFiles))
-        if len(tsFiles) < 20:
-            print("skipping, probably cookie has expired")
-            return
-
-        dir = self.getChunksDir()
-        os.system('mkdir -p ' + dir)
-
-        files = os.listdir(dir)
-        if len(files) >= len(tsFiles):
-            print("skipping already downloaded")
-            return
-
-        for tsFile in tsFiles:
-            tsFileURL = appendPathComponent(baseChunksSourceURL, tsFile)
-            tsFilePath = os.path.join(dir, tsFile)
-            downloadContent(tsFileURL, tsFilePath, cookies=cookies)
-
-    def glueChunks(self):
-        videoDir = self.getVideoDir()
-        os.system('mkdir -p ' + videoDir)
-        os.system('cat ' + self.getChunksDir() + '/*.ts > ' + self.getVideoFilePath())
 
     def getFileName(self, name):
         return name + '.' + self.ext
@@ -130,18 +85,28 @@ class Episode:
 
     def gdriveUploadIfNeeded(self):
         if self.gdriveUpload:
-            f = Folder('SwiftTalk')
-            print('uploading to google drive')
-            f.upload(self.getVideoFilePath())
+            folder = Folder('SwiftTalk')
+            file = folder.fileForName(self.fullName)
+            if file == None:
+                print('uploading to google drive')
+                folder.upload(self.getVideoFilePath())
+            else:
+                print('already uploaded')
 
     def download(self,cookies):
         print("Downloading", self)
-        self.renameExistingIfNeeded()
+        url = self.makeEpisodePageURL()
         if self.isDownloaded():
             print(self.fullName + ' is already downloaded')
-            return
-        self.downloadChunks(cookies)
-        self.glueChunks()
+        else:
+            subprocess.run(['youtube-dl',
+                            '--cookies',
+                            'cookies.txt',
+                            '--output',
+                            self.getVideoFilePath(),
+                            '--no-check-certificate',
+                            url])
+
         self.gdriveUploadIfNeeded()
 
 def saveUTF8Text(text,path):
@@ -188,14 +153,19 @@ def main():
         episodes[0].download(cookies)
     elif '-e' in sys.argv:
         argInd = sys.argv.index('-e')
-        ep = sys.argv[argInd+1]
+        ep = sys.argv[argInd + 1]
         print("Downloading episode",ep)
         for episode in episodes:
             if ep in episode.fullName:
                 episode.download(cookies)
                 break
     else:
+        if '--until' in sys.argv:
+            argInd = sys.argv.index('--until')
+            ep = sys.argv[argInd + 1]
         for episode in episodes:
+            if ep in episode.fullName:
+                break
             episode.download(cookies)
 
 
