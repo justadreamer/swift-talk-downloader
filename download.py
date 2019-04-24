@@ -93,6 +93,12 @@ class Episode:
             else:
                 print('already uploaded')
 
+    def leaveEmptyFile(self):
+        filepath = self.getVideoFilePath()
+        os.remove(filepath)
+        fd = os.open(filepath, flags=os.O_CREAT, mode=0o644)
+        os.close(fd)
+
     def download(self,cookies):
         print("Downloading", self)
         url = self.makeEpisodePageURL()
@@ -108,6 +114,8 @@ class Episode:
                             url])
 
         self.gdriveUploadIfNeeded()
+        self.leaveEmptyFile() # so that we have a mark that we downloaded it
+
 
 def saveUTF8Text(text,path):
     file = open(path, "wb")
@@ -160,6 +168,7 @@ def main():
                 episode.download(cookies)
                 break
     else:
+        ep = "some giberish which can't be part of an episode name"
         if '--until' in sys.argv:
             argInd = sys.argv.index('--until')
             ep = sys.argv[argInd + 1]
