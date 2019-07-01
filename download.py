@@ -85,7 +85,7 @@ class Episode:
 
     def gdriveUploadIfNeeded(self):
         if self.gdriveUpload:
-            folder = Folder('SwiftTalk')
+            folder = Folder('Screencasts/SwiftTalk')
             file = folder.fileForName(self.fullName)
             if file == None:
                 print('uploading to google drive')
