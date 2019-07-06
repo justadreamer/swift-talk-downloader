@@ -9,6 +9,7 @@ import sys
 from GoogleDriveWrapper import Folder
 from cookies import loadCookies
 import subprocess
+from pathlib import PurePath
 
 CHUNKS_DIR = 'content'
 VIDEOS_DIR = 'videos'
@@ -85,7 +86,7 @@ class Episode:
 
     def gdriveUploadIfNeeded(self):
         if self.gdriveUpload:
-            folder = Folder('Screencasts/SwiftTalk')
+            folder = Folder(PurePath('Screencasts/SwiftTalk'))
             file = folder.fileForName(self.fullName)
             if file == None:
                 print('uploading to google drive')
